@@ -11,7 +11,7 @@ public class Friday13Range implements Iterable<Temporal> {
 	
 	public static Friday13Range from( Temporal from, Temporal to ) {
 		if ( !from.getClass().equals(to.getClass() ) )
-			throw new IllegalArgumentException( "The arguments should belong to the same class." );
+			throw new IllegalArgumentException("The arguments should belong to the same class.");
 		if ( compare(from, to ) < 0 )
 			return new Friday13Range( from, to );
 		throw new IllegalArgumentException( "Impossible to create range: Temporal <from> must be earlier Temporal <to> " );
