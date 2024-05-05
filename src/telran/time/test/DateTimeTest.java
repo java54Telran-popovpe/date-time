@@ -104,7 +104,7 @@ class DateTimeTest {
 													LocalDate.of(2026, 3, THIRTEEN ),};
 		
 		actualFri13Array = new LocalDate[] {};
-		friday13Range = Friday13Range.from( LocalDateTime.of(2023, 1, THIRTEEN, 23, 59),  LocalDate.of(2026, 11, 13));
+		friday13Range = Friday13Range.from( LocalDate.of(2023, 1, THIRTEEN),  LocalDate.of(2026, 11, 13));
 		for( Temporal temporal: friday13Range ) {
 			actualFri13Array = Arrays.add(actualFri13Array, LocalDate.from(temporal));
 		}
@@ -113,6 +113,7 @@ class DateTimeTest {
 		assertEquals(expectedFri13Array.length, actualFri13Array.length);
 		
 		assertThrowsExactly(IllegalArgumentException.class, () -> Friday13Range.from( LocalDate.now(),  LocalDate.of(2021, 11, 13)));
+		assertThrowsExactly(IllegalArgumentException.class, () -> Friday13Range.from( Instant.now(),  LocalDate.of(2021, 11, 13)));
 		
 	}
 	
