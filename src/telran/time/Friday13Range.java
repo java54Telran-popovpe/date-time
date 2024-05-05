@@ -1,6 +1,7 @@
 package telran.time;
 
 import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAdjusters;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -35,6 +36,7 @@ public class Friday13Range implements Iterable<Temporal> {
 	private class FridayIterator implements Iterator<Temporal> {
 		
 		private Temporal fri13 = Friday13Range.this.from.with( new NextFriday13() );
+		private static NextFriday13 nextFri13 = new NextFriday13();
 
 		@Override
 		public boolean hasNext() {
@@ -46,7 +48,7 @@ public class Friday13Range implements Iterable<Temporal> {
 			if ( !hasNext() )
 				throw new NoSuchElementException();
 			Temporal result = fri13;
-			fri13 = fri13.with( new NextFriday13() ) ;
+			fri13 = fri13.with( nextFri13 ) ;
 			return result;
 		}
 	}
