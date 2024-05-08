@@ -6,6 +6,8 @@ import java.time.Month;
 import java.time.YearMonth;
 import java.time.format.TextStyle;
 import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.util.Locale;
 
 record MonthYear( int month, int year ) {
@@ -17,37 +19,20 @@ public class PrintCalendar {
 
 	private static final int TITLE_OFFSET = 5;
 	private static final int COLUMN_WIDTH = 4;
-	private static DayOfWeek[] weekDays = DayOfWeek.values();
+	private static int weekDaysNumber = DayOfWeek.values().length;
 
 	public static void main(String[] args) {
 		
 		try {
 			MonthYear monthYear = getMonthYear(args);
 			DayOfWeek firstWeekDay = getFirstWeekDay(args);
-			correctWeekDaysArray( firstWeekDay );
-			printCalendar(  monthYear );
+			printCalendar(  monthYear, firstWeekDay );
 		} catch (RuntimeException e) {
 			e.printStackTrace();
 		} 
 		catch (Exception e) {
 			System.out.println( e.getMessage()); 
 		} 
-		
-	
-	}
-
-	private static void correctWeekDaysArray(DayOfWeek firstWeekDay) {
-		if ( !firstWeekDay.equals(DayOfWeek.MONDAY)) {
-			DayOfWeek[] correctedArray = new DayOfWeek[weekDays.length];
-			int indexOfWeekDay = firstWeekDay.getValue() - 1;
-			System.arraycopy(weekDays, indexOfWeekDay, 
-					correctedArray, 0, 
-					weekDays.length - indexOfWeekDay );
-			System.arraycopy(weekDays, 0, 
-					correctedArray, weekDays.length - indexOfWeekDay, 
-					indexOfWeekDay );
-			weekDays = correctedArray;
-		}
 	}
 
 	private static DayOfWeek getFirstWeekDay(String[] args) throws Exception {
@@ -55,33 +40,30 @@ public class PrintCalendar {
 	}
 
 	private static DayOfWeek parseWeekDay(String string) throws Exception {
-		String wdInUpperCase = string.toUpperCase();
-		DayOfWeek[] allWeekDays = DayOfWeek.values();
-		int i = 0;
-		while ( i < allWeekDays.length && !allWeekDays[ i ].name().equals(wdInUpperCase)) {
-			i++;
-		}
-		if ( i == allWeekDays.length )
+		
+		try {
+			return DayOfWeek.valueOf(string.toUpperCase());
+		} 
+		catch (IllegalArgumentException e) {
 			throw new Exception( String.format("Unknown argument %s: should be a weekday", string) );
-		return allWeekDays[i];
+		}
 	}
 
-	private static void printCalendar(MonthYear monthYear) {
+	private static void printCalendar(MonthYear monthYear, DayOfWeek firstDayOfWeek) {
 		printTitle( monthYear);
-		printWeekDays();
-		printDays( monthYear );
+		printWeekDays( firstDayOfWeek );
+		printDays( monthYear, firstDayOfWeek );
 		
 	}
 
-	private static void printDays(MonthYear monthYear) {
+	private static void printDays(MonthYear monthYear, DayOfWeek firstDayOfWeek) {
 		int nDays = getDaysInMonth(monthYear);
-		int currentWeekDay = getFirstDayOfMonth( monthYear );
-		int indexOfCurrentWeekDay = getIndexOfWeekDay( DayOfWeek.of(currentWeekDay));
+		int indexOfCurrentWeekDay = getIndexOfWeekDay( monthYear, firstDayOfWeek);
 		int firstOffset = getFirstOffset( indexOfCurrentWeekDay );
 		System.out.printf("%s", " ".repeat(firstOffset));
 		for ( int day = 1; day <= nDays; day++ ) {
 			System.out.printf("%" + COLUMN_WIDTH + "d", day );
-			if ( indexOfCurrentWeekDay == weekDays.length - 1 ) {
+			if ( indexOfCurrentWeekDay == weekDaysNumber - 1 ) {
 				indexOfCurrentWeekDay = 0;
 				System.out.println();
 			} else 
@@ -90,22 +72,15 @@ public class PrintCalendar {
 		
 	}
 
+	private static int getIndexOfWeekDay(MonthYear monthYear, DayOfWeek firstDayOfWeek) {
+		LocalDate ld = LocalDate.of(monthYear.year(), monthYear.month(), 1);
+		LocalDate ldAdjustedToWeekDay = ld.with(TemporalAdjusters.previousOrSame(firstDayOfWeek));
+		return (int)ldAdjustedToWeekDay.until(ld, ChronoUnit.DAYS);
+	}
+
 	private static int getFirstOffset(int indexOfCurrentWeekDay) {
 		
 		return COLUMN_WIDTH * indexOfCurrentWeekDay;
-	}
-
-	private static int getIndexOfWeekDay( DayOfWeek weekDay) {
-		int i = 0;
-		while ( i < weekDays.length && !weekDays[i].equals(weekDay)) {
-			i++;
-		}
-		return i; 
-	}
-
-	private static int getFirstDayOfMonth(MonthYear monthYear) {
-		LocalDate ld = LocalDate.of(monthYear.year(), monthYear.month(), 1);
-		return ld.get(ChronoField.DAY_OF_WEEK);
 	}
 
 	private static int getDaysInMonth(MonthYear monthYear) {
@@ -114,10 +89,11 @@ public class PrintCalendar {
 
 	}
 
-	private static void printWeekDays() {
+	private static void printWeekDays( DayOfWeek weekDay ) {
 		System.out.printf("%s", " ".repeat( 1 ));
-		for ( DayOfWeek weekDay: weekDays) {
+		for ( int i = 0; i < 7; i++ ) {
 			System.out.printf("%" + COLUMN_WIDTH + "s", weekDay.getDisplayName(TextStyle.SHORT, Locale.forLanguageTag("en")));
+			weekDay = weekDay.plus(1);
 		}
 		System.out.println();
 	}
